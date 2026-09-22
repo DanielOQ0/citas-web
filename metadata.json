@@ -1,0 +1,6 @@
+{
+  "name": "FCV Citas",
+  "description": "Sistema de gestión y agendamiento de citas médicas para el Hospital Universitario FCV con perfiles de Paciente, Profesional y Administrador.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
