@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FcvDataService } from '../../services/fcv-data.service';
 import { UserRole } from '../../models/fcv.models';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
   template: `
     <header
       id="app-top-header"
@@ -84,15 +84,16 @@ import { UserRole } from '../../models/fcv.models';
               {{ fcvService.currentUser().roleTitle }}
             </span>
           </div>
-          <a
+          <button
             id="btn-logout"
-            routerLink="/login"
+            type="button"
+            (click)="logout()"
             class="p-2 rounded-xl text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
             title="Cerrar sesión / Ir a Login"
             aria-label="Cerrar sesión"
           >
             <span class="material-symbols-outlined text-xl">logout</span>
-          </a>
+          </button>
         </div>
       </div>
     </header>
@@ -101,10 +102,17 @@ import { UserRole } from '../../models/fcv.models';
 export class HeaderComponent {
   readonly fcvService = inject(FcvDataService);
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
   readonly toggleSidebar = output<void>();
 
   selectRole(role: UserRole, targetRoute: string) {
     this.fcvService.switchUserRole(role);
     this.router.navigateByUrl(targetRoute);
   }
+
+  logout() {
+    this.auth.logout().subscribe({ next: () => this.finishLogout(), error: () => { this.auth.clear(); this.finishLogout(); } });
+  }
+
+  private finishLogout() { this.fcvService.isAuthenticated.set(false); this.router.navigateByUrl('/login'); }
 }

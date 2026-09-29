@@ -10,6 +10,7 @@ import {
   EntidadEPS,
   UserRole,
 } from '../models/fcv.models';
+import { AuthUser } from './auth.service';
 
 export interface ToastInfo {
   show: boolean;
@@ -496,6 +497,14 @@ export class FcvDataService {
       this.currentUser.set(this.userAdmin);
       this.showToast('Sesión cambiada', 'Accediendo como Administrador FCV', 'admin_panel_settings');
     }
+  }
+
+  setAuthenticatedUser(user: AuthUser) {
+    const role = user.roles[0] ?? 'USER';
+    const current = role === 'ADMIN' ? this.userAdmin : role === 'PROFESSIONAL' ? this.userDoctor : this.userPaciente;
+    const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+    this.currentUser.set({ ...current, id: String(user.id), name: user.name, email: user.email, role, avatarText: initials || current.avatarText });
+    this.isAuthenticated.set(true);
   }
 
   showToast(title: string, message: string, icon = 'check_circle', type: 'success' | 'error' | 'info' = 'success') {

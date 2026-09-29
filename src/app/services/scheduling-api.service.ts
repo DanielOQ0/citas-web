@@ -8,10 +8,11 @@ export interface EpsItem { id: number; code: string; name: string; active: boole
 export interface PlanAdminRequest { epsId: number; regimeId: number; code: string; name: string; active: boolean; }
 export interface Affiliation { id: number; planId: number; planName: string; epsName: string; regimeName: string; active: boolean; }
 export interface Profile { id: number; name: string; email: string; phone: string; }
-export interface Specialty { id: number; name: string; durationMinutes: number; active: boolean; }
+export interface Specialty { id: number; name: string; durationMinutes: number; requiresAdminApproval: boolean; active: boolean; }
 export interface Professional { id: number; name: string; professionalCode: string; active: boolean; }
 export interface Availability { professionalId: number; locationId: number; specialtyId: number; date: string; startTime: string; durationMinutes: number; }
 export interface Appointment { id: number; status: string; professionalId: number; locationId: number; specialtyId: number; date: string; startTime: string; durationMinutes: number; rejectionReason?: string; }
+export interface HistoryItem { status: string; actorId?: number; source: string; reason?: string; occurredAt: string; }
 
 @Injectable({ providedIn: 'root' })
 export class SchedulingApiService {
@@ -35,17 +36,22 @@ export class SchedulingApiService {
   adminSpecialties() { return this.http.get<Specialty[]>(`${this.api}/api/v1/admin/specialties`, { headers: this.headers() }); }
   createSpecialty(body: Omit<Specialty, 'id'>) { return this.http.post<Specialty>(`${this.api}/api/v1/admin/specialties`, body, { headers: this.headers() }); }
   professionals() { return this.http.get<Professional[]>(`${this.api}/api/v1/admin/professionals`, { headers: this.headers() }); }
+  catalogProfessionals() { return this.http.get<Professional[]>(`${this.api}/api/v1/catalogs/professionals`); }
   createProfessional(body: unknown) { return this.http.post<Professional>(`${this.api}/api/v1/admin/professionals`, body, { headers: this.headers() }); }
   setAssignments(id: number, body: { specialtyIds: number[]; primarySpecialtyId: number; locationIds: number[] }) { return this.http.put<void>(`${this.api}/api/v1/admin/professionals/${id}/assignments`, body, { headers: this.headers() }); }
   setProfessionalActive(id: number, active: boolean) { return this.http.patch<void>(`${this.api}/api/v1/admin/professionals/${id}/active`, null, { headers: this.headers(), params: { active } }); }
-  blocks() { return this.http.get<unknown[]>(`${this.api}/api/v1/professional/availability-blocks`, { headers: this.headers() }); }
+  blocks() { return this.http.get<{ id: number; locationId: number; date: string; startTime: string; endTime: string }[]>(`${this.api}/api/v1/professional/availability-blocks`, { headers: this.headers() }); }
   createBlock(body: { locationId: number; date: string; startTime: string; endTime: string }) { return this.http.post(`${this.api}/api/v1/professional/availability-blocks`, body, { headers: this.headers() }); }
+  updateBlock(id: number, body: { locationId: number; date: string; startTime: string; endTime: string }) { return this.http.patch(`${this.api}/api/v1/professional/availability-blocks/${id}`, body, { headers: this.headers() }); }
+  deleteBlock(id: number) { return this.http.delete<void>(`${this.api}/api/v1/professional/availability-blocks/${id}`, { headers: this.headers() }); }
   availability(locationId: number, specialtyId: number, date: string, professionalId?: number) { let params = new HttpParams().set('locationId', locationId).set('specialtyId', specialtyId).set('date', date); if (professionalId) params = params.set('professionalId', professionalId); return this.http.get<Availability[]>(`${this.api}/api/v1/availability`, { params }); }
+  agenda(from?: string, to?: string, locationId?: number) { let params = new HttpParams(); if (from) params=params.set('from',from); if (to) params=params.set('to',to); if (locationId) params=params.set('locationId',locationId); return this.http.get<Appointment[]>(`${this.api}/api/v1/professional/appointments`, { headers: this.headers(), params }); }
   book(body: { professionalId: number; locationId: number; specialtyId: number; date: string; startTime: string; reason?: string }) { return this.http.post<Appointment>(`${this.api}/api/v1/appointments`, body, { headers: this.headers() }); }
-  requested() { return this.http.get<Appointment[]>(`${this.api}/api/v1/admin/appointments`, { headers: this.headers() }); }
+  requested(filters: { locationId?: number; professionalId?: number; specialtyId?: number; date?: string } = {}) { let params = new HttpParams(); Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== null && value !== '') params = params.set(key, String(value)); }); return this.http.get<Appointment[]>(`${this.api}/api/v1/admin/appointments`, { headers: this.headers(), params }); }
   decide(id: number, decision: 'APPROVE' | 'REJECT', reason?: string) { return this.http.post<Appointment>(`${this.api}/api/v1/admin/appointments/${id}/decision`, { decision, reason }, { headers: this.headers() }); }
   mine(status?: string, from?: string, to?: string) { let params = new HttpParams(); if (status) params=params.set('status',status); if (from) params=params.set('from',from); if (to) params=params.set('to',to); return this.http.get<Appointment[]>(`${this.api}/api/v1/appointments`, { headers: this.headers(), params }); }
   cancelAppointment(id: number) { return this.http.post<void>(`${this.api}/api/v1/appointments/${id}/cancel`, {}, { headers: this.headers() }); }
+  history(id: number) { return this.http.get<HistoryItem[]>(`${this.api}/api/v1/appointments/${id}/history`, { headers: this.headers() }); }
   requestReschedule(id: number, date: string, startTime: string, reason?: string) { return this.http.post(`${this.api}/api/v1/appointments/${id}/reschedule-requests`, { date, startTime, reason }, { headers: this.headers() }); }
   pendingReschedules() { return this.http.get<unknown[]>(`${this.api}/api/v1/admin/reschedule-requests`, { headers: this.headers() }); }
   decideReschedule(id: number, decision: 'APPROVE'|'REJECT', reason?: string) { return this.http.post(`${this.api}/api/v1/admin/reschedule-requests/${id}/decision`, { decision, reason }, { headers: this.headers() }); }
