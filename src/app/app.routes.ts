@@ -4,9 +4,11 @@ import { LoginPage } from './pages/login/login';
 import { PacienteInicioPage } from './pages/paciente/inicio/paciente-inicio';
 import { BuscarDisponibilidadPage } from './pages/paciente/buscar-disponibilidad/buscar-disponibilidad';
 import { MisCitasPage } from './pages/paciente/mis-citas/mis-citas';
+import { PerfilPage } from './pages/paciente/perfil/perfil';
 import { MiAgendaPage } from './pages/profesional/mi-agenda/mi-agenda';
 import { AdminSolicitudesPage } from './pages/administrador/solicitudes/solicitudes';
 import { ProfesionalesCatalogosPage } from './pages/administrador/profesionales-catalogos/profesionales-catalogos';
+import { ReprogramacionesPage } from './pages/administrador/reprogramaciones/reprogramaciones';
 import { authGuard } from './auth.guard';
 
 export const routes: Routes = [
@@ -37,6 +39,10 @@ export const routes: Routes = [
         component: MisCitasPage,
       },
       {
+        path: 'paciente/perfil',
+        component: PerfilPage,
+      },
+      {
         path: 'profesional/mi-agenda',
         component: MiAgendaPage,
       },
@@ -47,6 +53,10 @@ export const routes: Routes = [
       {
         path: 'administrador/profesionales',
         component: ProfesionalesCatalogosPage,
+      },
+      {
+        path: 'administrador/reprogramaciones',
+        component: ReprogramacionesPage,
       },
       {
         path: 'administrador/catalogos',
