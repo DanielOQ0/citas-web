@@ -9,7 +9,7 @@ import { MiAgendaPage } from './pages/profesional/mi-agenda/mi-agenda';
 import { AdminSolicitudesPage } from './pages/administrador/solicitudes/solicitudes';
 import { ProfesionalesCatalogosPage } from './pages/administrador/profesionales-catalogos/profesionales-catalogos';
 import { ReprogramacionesPage } from './pages/administrador/reprogramaciones/reprogramaciones';
-import { authGuard } from './auth.guard';
+import { authGuard, roleGuard } from './auth.guard';
 
 export const routes: Routes = [
   {
@@ -28,35 +28,35 @@ export const routes: Routes = [
       },
       {
         path: 'paciente/inicio',
-        component: PacienteInicioPage,
+        component: PacienteInicioPage, canActivate: [roleGuard(['USER'])],
       },
       {
         path: 'paciente/buscar-disponibilidad',
-        component: BuscarDisponibilidadPage,
+        component: BuscarDisponibilidadPage, canActivate: [roleGuard(['USER'])],
       },
       {
         path: 'paciente/mis-citas',
-        component: MisCitasPage,
+        component: MisCitasPage, canActivate: [roleGuard(['USER'])],
       },
       {
         path: 'paciente/perfil',
-        component: PerfilPage,
+        component: PerfilPage, canActivate: [roleGuard(['USER'])],
       },
       {
         path: 'profesional/mi-agenda',
-        component: MiAgendaPage,
+        component: MiAgendaPage, canActivate: [roleGuard(['PROFESSIONAL'])],
       },
       {
         path: 'administrador/solicitudes',
-        component: AdminSolicitudesPage,
+        component: AdminSolicitudesPage, canActivate: [roleGuard(['ADMIN'])],
       },
       {
         path: 'administrador/profesionales',
-        component: ProfesionalesCatalogosPage,
+        component: ProfesionalesCatalogosPage, canActivate: [roleGuard(['ADMIN'])],
       },
       {
         path: 'administrador/reprogramaciones',
-        component: ReprogramacionesPage,
+        component: ReprogramacionesPage, canActivate: [roleGuard(['ADMIN'])],
       },
       {
         path: 'administrador/catalogos',

@@ -53,7 +53,7 @@ import { FcvDataService } from '../../services/fcv-data.service';
         <!-- Navigation Links Grouped by Context -->
         <nav class="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-180px)] scrollbar-none" aria-label="Navegación principal">
           <!-- SECCIÓN: PACIENTE -->
-          <div>
+          @if (fcvService.currentUser().role === 'USER') {<div>
             <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
               <span class="material-symbols-outlined text-sm">person</span>
               <span>Portal Paciente</span>
@@ -96,10 +96,10 @@ import { FcvDataService } from '../../services/fcv-data.service';
                 </span>
               </a>
             </div>
-          </div>
+          </div>}
 
           <!-- SECCIÓN: PROFESIONAL -->
-          <div>
+          @if (fcvService.currentUser().role === 'PROFESSIONAL') {<div>
             <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
               <span class="material-symbols-outlined text-sm">stethoscope</span>
               <span>Portal Médico</span>
@@ -121,10 +121,10 @@ import { FcvDataService } from '../../services/fcv-data.service';
                 </span>
               </a>
             </div>
-          </div>
+          </div>}
 
           <!-- SECCIÓN: ADMINISTRADOR -->
-          <div>
+          @if (fcvService.currentUser().role === 'ADMIN') {<div>
             <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
               <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
               <span>Administración Clínica</span>
@@ -158,7 +158,7 @@ import { FcvDataService } from '../../services/fcv-data.service';
                 <span>Profesionales y Catálogos</span>
               </a>
             </div>
-          </div>
+          </div>}
         </nav>
       </div>
 

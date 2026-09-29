@@ -12,7 +12,7 @@ import { SchedulingApiService, Availability, CatalogItem, Specialty } from '../.
       <label class="text-xs font-semibold">Especialidad<select class="mt-1 w-full p-2 rounded-xl" [(ngModel)]="specialtyId"><option [ngValue]="0">Seleccione</option>@for (s of specialties(); track s.id) {<option [ngValue]="s.id">{{s.name}} · {{s.durationMinutes}} min</option>}</select></label>
       <label class="text-xs font-semibold">Fecha<input class="mt-1 w-full p-2 rounded-xl" type="date" [(ngModel)]="date"></label>
       <button class="self-end py-2 rounded-xl bg-primary text-on-primary font-semibold" (click)="search()">Buscar</button>
-    </div>
+    </div><p class="text-xs text-outline">Ejemplo con datos demo: selecciona Medicina General y la fecha de mañana; hay horarios publicados en ambas sedes.</p>
     @if (error()) {<p class="text-error text-sm">{{error()}}</p>}
     <div class="grid gap-4 md:grid-cols-2">@for (slot of slots(); track slot.professionalId + '-' + slot.startTime) {<article class="rounded-3xl bg-surface-container-lowest p-5 border border-outline-variant/40"><p class="font-bold">Profesional #{{slot.professionalId}}</p><p class="text-sm text-outline">{{slot.date}} · {{slot.startTime}} · {{slot.durationMinutes}} min</p><button class="mt-4 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm" (click)="book(slot)">Confirmar cita</button></article>} @empty {<p class="text-sm text-outline">{{searched() ? 'No hay horarios disponibles para esa combinación. Prueba otra sede o fecha.' : 'Consulta una sede, especialidad y fecha para ver horarios reales.'}}</p>}</div>
     </section>`
