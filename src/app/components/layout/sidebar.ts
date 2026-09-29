@@ -92,7 +92,7 @@ import { FcvDataService } from '../../services/fcv-data.service';
                   <span>Mis Citas e Historial</span>
                 </div>
                 <span class="px-2 py-0.5 text-xs rounded-full bg-surface-container-high text-on-surface-variant font-semibold">
-                  {{ fcvService.activeAppointmentsCount() }}
+                  {{ fcvService.remoteAppointmentsCount() }}
                 </span>
               </a>
             </div>

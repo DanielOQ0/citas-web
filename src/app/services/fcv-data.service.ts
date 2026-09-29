@@ -61,6 +61,7 @@ export class FcvDataService {
   // State Signals
   readonly currentUser = signal<UserProfile>(this.userPaciente);
   readonly isAuthenticated = signal<boolean>(false);
+  readonly remoteAppointmentsCount = signal(0);
 
   readonly toast = signal<ToastInfo>({
     show: false,
