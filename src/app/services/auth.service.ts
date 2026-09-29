@@ -1,7 +1,7 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, finalize, shareReplay, tap, throwError } from 'rxjs';
 import { UserRole } from '../models/fcv.models';
 
 export interface AuthUser { id: number; name: string; email: string; roles: UserRole[]; }
@@ -16,13 +16,22 @@ export class AuthService {
   private readonly apiUrlValue = this.read('fcv_api_url') || 'http://localhost:8080';
   private readonly accessKey = 'fcv.accessToken';
   private readonly refreshKey = 'fcv.refreshToken';
+  private refreshInFlight?: Observable<TokenResponse>;
 
   login(request: LoginRequest): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${this.apiUrlValue}/api/auth/login`, request).pipe(tap((response) => this.store(response)));
   }
   register(request: RegisterRequest): Observable<TokenResponse> { return this.http.post<TokenResponse>(`${this.apiUrlValue}/api/auth/register`, request).pipe(tap((response) => this.store(response))); }
   refresh(): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.apiUrlValue}/api/auth/refresh`, { refreshToken: this.refreshToken() }).pipe(tap((response) => this.store(response)));
+    const token = this.refreshToken();
+    if (!token) return throwError(() => new Error('No hay refresh token disponible'));
+    if (this.refreshInFlight) return this.refreshInFlight;
+    this.refreshInFlight = this.http.post<TokenResponse>(`${this.apiUrlValue}/api/auth/refresh`, { refreshToken: token }).pipe(
+      tap((response) => this.store(response)),
+      finalize(() => { this.refreshInFlight = undefined; }),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+    return this.refreshInFlight;
   }
   logout(): Observable<void> {
     const token = this.refreshToken();
