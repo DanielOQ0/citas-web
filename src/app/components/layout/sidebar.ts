@@ -184,7 +184,27 @@ import { SessionService } from '../../services/session.service';
                     class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
                   >
                     <span class="material-symbols-outlined text-xl">medical_information</span>
-                    <span>Profesionales y Catálogos</span>
+                    <span>Profesionales</span>
+                  </a>
+                  <a
+                    id="nav-admin-especialidades"
+                    routerLink="/administrador/especialidades"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-xl">category</span>
+                    <span>Especialidades</span>
+                  </a>
+                  <a
+                    id="nav-admin-eps"
+                    routerLink="/administrador/eps-planes"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-xl">health_and_safety</span>
+                    <span>EPS y Planes</span>
                   </a>
                 </div>
               </div>
