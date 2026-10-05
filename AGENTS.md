@@ -2,9 +2,7 @@
 
 ## Estado observado
 
-Este repositorio está vacío de aplicación: no existe `package.json`, framework, código fuente, rutas, componentes, estilos/tokens ni evidencia de un diseño aprobado de Stitch/Google AI Studio. No asumir React ni Angular, ni crear o reemplazar un framework por preferencia propia.
-
-Antes de implementar UI, debe existir un handoff aprobado de Stitch → Google AI Studio y el código exportado debe estar presente en este repositorio. La estructura, scripts y comandos de build/typecheck/tests se deducen entonces de esa evidencia real.
+Actualizado 2026-10-05. Angular 21 exportado desde Google AI Studio, como SPA sin SSR ni Express (D-05). Las rutas son lazy por rol con `canMatch` y `SessionService` (`/api/me`) es la única fuente del rol (D-23). Comandos: `npm run build`, `npm test -- --watch=false`, `npm run lint` (en el contenedor `fcv-citas-web-dev`). Las pantallas nuevas reutilizan los tokens del diseño aprobado mediante las clases `fcv-*` de `src/styles.css` (D-22). No reemplazar el framework.
 
 ## Alcance
 
@@ -27,7 +25,7 @@ Leer antes de cualquier cambio, en este orden:
 4. El diseño aprobado, sus tokens, assets, rutas y handoff de AI Studio.
 5. `../citas-api/docs/wiki/llm-wiki/wiki/index.md` solo como contexto global.
 
-Actualmente no existen HU/DoD, código exportado ni documentación de diseño en este repositorio. Si una tarea requiere cualquiera de ellos, no inventar el alcance, contrato, estética o framework: reportar el bloqueo y solicitar el insumo correspondiente.
+Las HU y el contrato oficial viven en `citas-api/docs/wiki/`. Si una tarea requiere un insumo que no existe, no inventar el alcance, contrato, estética o framework: reportar el bloqueo y solicitar el insumo correspondiente.
 
 La LLM Wiki es global y la mantiene el orquestador. Este agente puede consultarla, pero no crearla ni actualizarla.
 
