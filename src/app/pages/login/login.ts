@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID, signal } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, AuthUser } from '../../services/auth.service';
 import { PlanItem, SchedulingApiService } from '../../services/scheduling-api.service';
-import { FcvDataService } from '../../services/fcv-data.service';
+import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-login', changeDetection: ChangeDetectionStrategy.OnPush, imports: [FormsModule],
@@ -20,14 +19,14 @@ import { FcvDataService } from '../../services/fcv-data.service';
       </div></section></main>`
 })
 export class LoginPage {
-  private readonly auth = inject(AuthService); private readonly api = inject(SchedulingApiService); private readonly fcv = inject(FcvDataService); private readonly router = inject(Router); private readonly platform = inject(PLATFORM_ID);
+  private readonly auth = inject(AuthService); private readonly api = inject(SchedulingApiService); private readonly session = inject(SessionService); private readonly router = inject(Router);
   readonly mode = signal<'login' | 'register' | 'recovery'>('login'); readonly plans = signal<PlanItem[]>([]); readonly message = signal(''); readonly error = signal(false);
   email = ''; password = ''; firstName = ''; lastName = ''; documentNumber = ''; phone = ''; planId: number | undefined; resetToken = ''; newPassword = '';
-  constructor() { if (isPlatformBrowser(this.platform)) this.api.plans().subscribe({ next: x => this.plans.set(x) }); }
+  constructor() { this.api.plans().subscribe({ next: x => this.plans.set(x) }); }
   login() { this.auth.login({ email: this.email, password: this.password }).subscribe({ next: r => this.go(r.user), error: () => this.show('Credenciales inválidas o servicio no disponible.', true) }); }
   register() { this.auth.register({ firstName: this.firstName, lastName: this.lastName, documentType: 'CC', documentNumber: this.documentNumber, email: this.email, phone: this.phone, password: this.password, insurancePlanId: this.planId }).subscribe({ next: r => this.go(r.user), error: e => this.show(e.status === 409 ? 'Email o documento ya registrado.' : 'No fue posible crear la cuenta.', true) }); }
   requestRecovery() { this.auth.requestPasswordRecovery(this.email).subscribe({ next: response => { if (response.developmentToken) this.resetToken = response.developmentToken; this.show('Si la cuenta existe, recibirás instrucciones para cambiar la contraseña.'); }, error: () => this.show('No fue posible procesar la solicitud.', true) }); }
   resetPassword() { this.auth.resetPassword(this.resetToken, this.newPassword).subscribe({ next: () => { this.show('Contraseña actualizada. Ya puedes iniciar sesión.'); this.mode.set('login'); this.password = ''; }, error: () => this.show('Token inválido o expirado.', true) }); }
-  private go(user: { id: number; name: string; email: string; roles: ('USER' | 'PROFESSIONAL' | 'ADMIN')[] }) { this.fcv.setAuthenticatedUser(user); const role = user.roles[0]; this.router.navigateByUrl(role === 'ADMIN' ? '/administrador/solicitudes' : role === 'PROFESSIONAL' ? '/profesional/mi-agenda' : '/paciente/inicio'); }
+  private go(user: AuthUser) { this.session.start(user); this.router.navigateByUrl(this.session.home()); }
   private show(text: string, isError = false) { this.message.set(text); this.error.set(isError); }
 }

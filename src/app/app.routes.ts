@@ -1,20 +1,15 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { ShellComponent } from './components/layout/shell';
-import { LoginPage } from './pages/login/login';
-import { PacienteInicioPage } from './pages/paciente/inicio/paciente-inicio';
-import { BuscarDisponibilidadPage } from './pages/paciente/buscar-disponibilidad/buscar-disponibilidad';
-import { MisCitasPage } from './pages/paciente/mis-citas/mis-citas';
-import { PerfilPage } from './pages/paciente/perfil/perfil';
-import { MiAgendaPage } from './pages/profesional/mi-agenda/mi-agenda';
-import { AdminSolicitudesPage } from './pages/administrador/solicitudes/solicitudes';
-import { ProfesionalesCatalogosPage } from './pages/administrador/profesionales-catalogos/profesionales-catalogos';
-import { ReprogramacionesPage } from './pages/administrador/reprogramaciones/reprogramaciones';
-import { authGuard, roleGuard } from './auth.guard';
+import { authGuard, guestGuard, roleMatch } from './auth.guard';
+import { SessionService } from './services/session.service';
 
 export const routes: Routes = [
   {
     path: 'login',
-    component: LoginPage,
+    title: 'Ingresar · FCV Citas',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./pages/login/login').then((m) => m.LoginPage),
   },
   {
     path: '',
@@ -22,50 +17,22 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'paciente/inicio',
+        path: 'paciente',
+        canMatch: [roleMatch('USER')],
+        loadChildren: () => import('./pages/paciente/paciente.routes').then((m) => m.PACIENTE_ROUTES),
       },
       {
-        path: 'paciente/inicio',
-        component: PacienteInicioPage, canActivate: [roleGuard(['USER'])],
+        path: 'profesional',
+        canMatch: [roleMatch('PROFESSIONAL')],
+        loadChildren: () => import('./pages/profesional/profesional.routes').then((m) => m.PROFESIONAL_ROUTES),
       },
       {
-        path: 'paciente/buscar-disponibilidad',
-        component: BuscarDisponibilidadPage, canActivate: [roleGuard(['USER'])],
+        path: 'administrador',
+        canMatch: [roleMatch('ADMIN')],
+        loadChildren: () => import('./pages/administrador/administrador.routes').then((m) => m.ADMINISTRADOR_ROUTES),
       },
-      {
-        path: 'paciente/mis-citas',
-        component: MisCitasPage, canActivate: [roleGuard(['USER'])],
-      },
-      {
-        path: 'paciente/perfil',
-        component: PerfilPage, canActivate: [roleGuard(['USER'])],
-      },
-      {
-        path: 'profesional/mi-agenda',
-        component: MiAgendaPage, canActivate: [roleGuard(['PROFESSIONAL'])],
-      },
-      {
-        path: 'administrador/solicitudes',
-        component: AdminSolicitudesPage, canActivate: [roleGuard(['ADMIN'])],
-      },
-      {
-        path: 'administrador/profesionales',
-        component: ProfesionalesCatalogosPage, canActivate: [roleGuard(['ADMIN'])],
-      },
-      {
-        path: 'administrador/reprogramaciones',
-        component: ReprogramacionesPage, canActivate: [roleGuard(['ADMIN'])],
-      },
-      {
-        path: 'administrador/catalogos',
-        redirectTo: 'administrador/profesionales',
-      },
+      // Rutas de otro rol o desconocidas: inicio del rol de la sesión (o login sin sesión).
+      { path: '**', redirectTo: () => inject(SessionService).home() },
     ],
-  },
-  {
-    path: '**',
-    redirectTo: 'paciente/inicio',
   },
 ];

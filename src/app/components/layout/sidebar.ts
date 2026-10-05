@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { FcvDataService } from '../../services/fcv-data.service';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, input, output } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { filter } from 'rxjs';
+import { BadgeService } from '../../services/badge.service';
+import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -50,135 +53,174 @@ import { FcvDataService } from '../../services/fcv-data.service';
           </button>
         </div>
 
-        <!-- Navigation Links Grouped by Context -->
+        <!-- Navigation: only the section of the session role is rendered -->
         <nav class="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-180px)] scrollbar-none" aria-label="Navegación principal">
-          <!-- SECCIÓN: PACIENTE -->
-          @if (fcvService.currentUser().role === 'USER') {<div>
-            <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm">person</span>
-              <span>Portal Paciente</span>
-            </div>
-            <div class="space-y-1">
-              <a
-                id="nav-paciente-inicio"
-                routerLink="/paciente/inicio"
-                routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
-                [routerLinkActiveOptions]="{ exact: true }"
-                (click)="closeSidebar.emit()"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
-              >
-                <span class="material-symbols-outlined text-xl">dashboard</span>
-                <span>Resumen de Citas</span>
-              </a>
-              <a
-                id="nav-paciente-buscar"
-                routerLink="/paciente/buscar-disponibilidad"
-                routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
-                (click)="closeSidebar.emit()"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
-              >
-                <span class="material-symbols-outlined text-xl">event_available</span>
-                <span>Buscar Disponibilidad</span>
-              </a>
-              <a
-                id="nav-paciente-citas"
-                routerLink="/paciente/mis-citas"
-                routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
-                (click)="closeSidebar.emit()"
-                class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
-              >
-                <div class="flex items-center gap-3">
-                  <span class="material-symbols-outlined text-xl">calendar_month</span>
-                  <span>Mis Citas e Historial</span>
+          @switch (session.role()) {
+            @case ('USER') {
+              <div>
+                <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm">person</span>
+                  <span>Portal Paciente</span>
                 </div>
-                <span class="px-2 py-0.5 text-xs rounded-full bg-surface-container-high text-on-surface-variant font-semibold">
-                  {{ fcvService.remoteAppointmentsCount() }}
-                </span>
-              </a>
-            </div>
-          </div>}
+                <div class="space-y-1">
+                  <a
+                    id="nav-paciente-inicio"
+                    routerLink="/paciente/inicio"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-xl">dashboard</span>
+                    <span>Resumen de Citas</span>
+                  </a>
+                  <a
+                    id="nav-paciente-buscar"
+                    routerLink="/paciente/buscar-disponibilidad"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-xl">event_available</span>
+                    <span>Buscar Disponibilidad</span>
+                  </a>
+                  <a
+                    id="nav-paciente-citas"
+                    routerLink="/paciente/mis-citas"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <div class="flex items-center gap-3">
+                      <span class="material-symbols-outlined text-xl">calendar_month</span>
+                      <span>Mis Citas e Historial</span>
+                    </div>
+                    @if (badges.upcomingAppointments() > 0) {
+                      <span class="px-2 py-0.5 text-xs rounded-full bg-surface-container-high text-on-surface-variant font-semibold" title="Citas próximas">
+                        {{ badges.upcomingAppointments() }}
+                      </span>
+                    }
+                  </a>
+                  <a
+                    id="nav-paciente-perfil"
+                    routerLink="/paciente/perfil"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-xl">badge</span>
+                    <span>Mi Perfil y Afiliación</span>
+                  </a>
+                </div>
+              </div>
+            }
 
-          <!-- SECCIÓN: PROFESIONAL -->
-          @if (fcvService.currentUser().role === 'PROFESSIONAL') {<div>
-            <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm">stethoscope</span>
-              <span>Portal Médico</span>
-            </div>
-            <div class="space-y-1">
-              <a
-                id="nav-profesional-agenda"
-                routerLink="/profesional/mi-agenda"
-                routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
-                (click)="closeSidebar.emit()"
-                class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
-              >
-                <div class="flex items-center gap-3">
-                  <span class="material-symbols-outlined text-xl">view_timeline</span>
-                  <span>Mi Agenda Asistencial</span>
+            @case ('PROFESSIONAL') {
+              <div>
+                <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm">stethoscope</span>
+                  <span>Portal Médico</span>
                 </div>
-                <span class="px-2 py-0.5 text-xs rounded-full bg-secondary-container text-on-secondary-container font-semibold">
-                  Hoy
-                </span>
-              </a>
-            </div>
-          </div>}
+                <div class="space-y-1">
+                  <a
+                    id="nav-profesional-agenda"
+                    routerLink="/profesional/mi-agenda"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-xl">view_timeline</span>
+                    <span>Mi Agenda Asistencial</span>
+                  </a>
+                </div>
+              </div>
+            }
 
-          <!-- SECCIÓN: ADMINISTRADOR -->
-          @if (fcvService.currentUser().role === 'ADMIN') {<div>
-            <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
-              <span>Administración Clínica</span>
-            </div>
-            <div class="space-y-1">
-              <a
-                id="nav-admin-solicitudes"
-                routerLink="/administrador/solicitudes"
-                routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
-                (click)="closeSidebar.emit()"
-                class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
-              >
-                <div class="flex items-center gap-3">
-                  <span class="material-symbols-outlined text-xl">assignment_turned_in</span>
-                  <span>Solicitudes y Reprogramación</span>
+            @case ('ADMIN') {
+              <div>
+                <div class="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm">admin_panel_settings</span>
+                  <span>Administración Clínica</span>
                 </div>
-                @if (fcvService.pendingSpecializedAppointments().length + fcvService.pendingReprogramaciones().length > 0) {
-                  <span class="px-2 py-0.5 text-xs rounded-full bg-error text-on-error font-bold">
-                    {{ fcvService.pendingSpecializedAppointments().length + fcvService.pendingReprogramaciones().length }}
-                  </span>
-                }
-              </a>
-              <a
-                id="nav-admin-profesionales"
-                routerLink="/administrador/profesionales"
-                routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
-                (click)="closeSidebar.emit()"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
-              >
-                <span class="material-symbols-outlined text-xl">medical_information</span>
-                <span>Profesionales y Catálogos</span>
-              </a>
-            </div>
-          </div>}
+                <div class="space-y-1">
+                  <a
+                    id="nav-admin-solicitudes"
+                    routerLink="/administrador/solicitudes"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <div class="flex items-center gap-3">
+                      <span class="material-symbols-outlined text-xl">assignment_turned_in</span>
+                      <span>Solicitudes Especializadas</span>
+                    </div>
+                    @if (badges.requestedAppointments() > 0) {
+                      <span class="px-2 py-0.5 text-xs rounded-full bg-error text-on-error font-bold" title="Solicitudes pendientes">
+                        {{ badges.requestedAppointments() }}
+                      </span>
+                    }
+                  </a>
+                  <a
+                    id="nav-admin-reprogramaciones"
+                    routerLink="/administrador/reprogramaciones"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <div class="flex items-center gap-3">
+                      <span class="material-symbols-outlined text-xl">event_repeat</span>
+                      <span>Reprogramaciones</span>
+                    </div>
+                    @if (badges.pendingReschedules() > 0) {
+                      <span class="px-2 py-0.5 text-xs rounded-full bg-error text-on-error font-bold" title="Reprogramaciones pendientes">
+                        {{ badges.pendingReschedules() }}
+                      </span>
+                    }
+                  </a>
+                  <a
+                    id="nav-admin-profesionales"
+                    routerLink="/administrador/profesionales"
+                    routerLinkActive="bg-primary-fixed text-on-primary-fixed font-semibold"
+                    (click)="closeSidebar.emit()"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-xl">medical_information</span>
+                    <span>Profesionales y Catálogos</span>
+                  </a>
+                </div>
+              </div>
+            }
+          }
         </nav>
       </div>
 
-      <!-- Environment & Sandbox Notice Footer -->
+      <!-- Environment notice -->
       <div class="p-4 border-t border-outline-variant/30 bg-surface-container-low/50">
         <div class="flex items-center gap-2 mb-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
           <span class="text-[11px] font-semibold tracking-wide uppercase text-on-surface-variant">
-            Sandbox H2 In-Memory
+            Entorno académico
           </span>
         </div>
         <p class="text-[11px] text-outline leading-snug">
-          Entorno Académico FCV · Datos sintéticos demostrativos para validación clínica.
+          Datos sintéticos de laboratorio · Sin información real de pacientes ni profesionales.
         </p>
       </div>
     </aside>
   `,
 })
 export class SidebarComponent {
-  readonly fcvService = inject(FcvDataService);
+  readonly session = inject(SessionService);
+  readonly badges = inject(BadgeService);
   readonly isOpen = input<boolean>(false);
   readonly closeSidebar = output<void>();
+
+  constructor() {
+    this.badges.refresh();
+    inject(Router)
+      .events.pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(inject(DestroyRef)),
+      )
+      .subscribe(() => this.badges.refresh());
+  }
 }

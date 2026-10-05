@@ -1,19 +1,19 @@
-import { Injectable, inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, finalize, shareReplay, tap, throwError } from 'rxjs';
-import { UserRole } from '../models/fcv.models';
+import { environment } from '../../environments/environment';
+import { UserRole } from '../models/user-role';
 
 export interface AuthUser { id: number; name: string; email: string; roles: UserRole[]; }
 export interface TokenResponse { accessToken: string; refreshToken: string; expiresIn: number; user: AuthUser; }
 export interface LoginRequest { email: string; password: string; }
 export interface RegisterRequest { firstName: string; lastName: string; documentType: string; documentNumber: string; email: string; phone: string; password: string; insurancePlanId?: number; }
 
+/** Tokens y endpoints públicos de /api/auth. El usuario y su rol los gobierna SessionService. */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly platformId = inject(PLATFORM_ID);
-  private readonly apiUrlValue = this.read('fcv_api_url') || 'http://localhost:8080';
+  private readonly apiUrlValue = this.read('fcv_api_url') || environment.apiUrl;
   private readonly accessKey = 'fcv.accessToken';
   private readonly refreshKey = 'fcv.refreshToken';
   private refreshInFlight?: Observable<TokenResponse>;
@@ -42,7 +42,8 @@ export class AuthService {
   accessToken(): string { return this.read(this.accessKey); }
   apiUrl(): string { return this.apiUrlValue; }
   refreshToken(): string { return this.read(this.refreshKey); }
-  clear(): void { if (isPlatformBrowser(this.platformId)) { localStorage.removeItem(this.accessKey); localStorage.removeItem(this.refreshKey); localStorage.removeItem('fcv.user'); } }
-  private store(response: TokenResponse): void { if (isPlatformBrowser(this.platformId)) { localStorage.setItem(this.accessKey, response.accessToken); localStorage.setItem(this.refreshKey, response.refreshToken); localStorage.setItem('fcv.user', JSON.stringify(response.user)); } }
-  private read(key: string): string { return isPlatformBrowser(this.platformId) ? localStorage.getItem(key) || '' : ''; }
+  // 'fcv.user' es legado: el rol ya no se toma del almacenamiento del navegador.
+  clear(): void { localStorage.removeItem(this.accessKey); localStorage.removeItem(this.refreshKey); localStorage.removeItem('fcv.user'); }
+  private store(response: TokenResponse): void { localStorage.setItem(this.accessKey, response.accessToken); localStorage.setItem(this.refreshKey, response.refreshToken); }
+  private read(key: string): string { return localStorage.getItem(key) || ''; }
 }

@@ -2,11 +2,13 @@ import { HttpContextToken, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { SessionService } from './session.service';
 
 const RETRIED = new HttpContextToken<boolean>(() => false);
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthService);
+  const session = inject(SessionService);
   const publicEndpoint = /\/api\/auth\/(login|register|refresh|logout|password-recovery|password-reset)$/.test(request.url);
   const access = auth.accessToken();
   const authorized = access && !request.headers.has('Authorization')
@@ -19,7 +21,8 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
         setHeaders: { Authorization: `Bearer ${response.accessToken}` },
         context: authorized.context.set(RETRIED, true),
       }))),
-      catchError(refreshError => { auth.clear(); return throwError(() => refreshError); }),
+      // Refresh vencido o revocado (HU-004 CA-02): la sesión termina y se vuelve al login.
+      catchError(refreshError => { session.expire(); return throwError(() => refreshError); }),
     );
   }));
 };
